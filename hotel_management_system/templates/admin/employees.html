@@ -1,0 +1,318 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Manage Employees{% endblock %}
+
+{% block content %}
+<section class="admin-section">
+    <h2>Manage Employees</h2>
+    
+    <div class="form-container">
+        <h3>Add New Employee</h3>
+        <form method="post" action="{{ url_for('admin.add_employee_route') }}" data-validate="true">
+            <div class="form-group">
+                <label for="name">Full Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="position">Position:</label>
+                <input type="text" id="position" name="position" required>
+            </div>
+            <div class="form-group">
+                <label for="department">Department:</label>
+                <select id="department" name="department" required>
+                    <option value="Management">Management</option>
+                    <option value="Front Desk">Front Desk</option>
+                    <option value="Housekeeping">Housekeeping</option>
+                    <option value="Food Service">Food Service</option>
+                    <option value="Maintenance">Maintenance</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="contact">Contact:</label>
+                <input type="text" id="contact" name="contact" required>
+            </div>
+            <div class="form-group">
+                <label for="salary">Salary:</label>
+                <input type="number" id="salary" name="salary" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="hire_date">Hire Date:</label>
+                <input type="date" id="hire_date" name="hire_date" value="{{ today_date }}">
+            </div>
+            <button type="submit" class="btn btn-primary">Add Employee</button>
+        </form>
+    </div>
+    
+    <div class="filter-bar">
+        <div class="filter-group">
+            <label for="department-filter">Department:</label>
+            <select id="department-filter">
+                <option value="all">All Departments</option>
+                <option value="Management">Management</option>
+                <option value="Front Desk">Front Desk</option>
+                <option value="Housekeeping">Housekeeping</option>
+                <option value="Food Service">Food Service</option>
+                <option value="Maintenance">Maintenance</option>
+            </select>
+        </div>
+        <div class="search-group">
+            <input type="text" id="employee-search" placeholder="Search employees...">
+            <button class="btn btn-small" id="search-btn">Search</button>
+        </div>
+    </div>
+    
+    <div class="data-table-container">
+        <h3>Employee List</h3>
+        <table class="data-table" id="employees-table" data-sortable="true">
+            <thead>
+                <tr>
+                    <th data-sortable>ID</th>
+                    <th data-sortable>Name</th>
+                    <th data-sortable>Position</th>
+                    <th data-sortable>Department</th>
+                    <th data-sortable>Contact</th>
+                    <th data-sortable>Hire Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for employee in employees %}
+                <tr data-department="{{ employee.department }}">
+                    <td>{{ employee.id }}</td>
+                    <td>{{ employee.name }}</td>
+                    <td>{{ employee.position }}</td>
+                    <td>{{ employee.department }}</td>
+                    <td>{{ employee.contact }}</td>
+                    <td>{{ employee.hire_date }}</td>
+                    <td>
+                        <button class="btn btn-small edit-employee" data-id="{{ employee.id }}">Edit</button>
+                        <button class="btn btn-small btn-danger delete-employee" data-id="{{ employee.id }}">Delete</button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7">No employees found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if pages > 1 %}
+    <div class="pagination">
+        <span>Page {{ current_page }} of {{ pages }}</span>
+        {% if current_page > 1 %}
+        <a href="{{ url_for('admin.employees', page=current_page-1) }}" class="btn btn-small">Previous</a>
+        {% endif %}
+        {% if current_page < pages %}
+        <a href="{{ url_for('admin.employees', page=current_page+1) }}" class="btn btn-small">Next</a>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- Department Summary -->
+    <div class="summary-section">
+        <h3>Department Summary</h3>
+        <div class="summary-cards">
+            {% for dept in department_summary %}
+            <div class="summary-card">
+                <h4>{{ dept.name }}</h4>
+                <p class="summary-number">{{ dept.count }}</p>
+                <p class="summary-label">Employees</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Edit Employee Modal -->
+<div id="edit-employee-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Edit Employee</h3>
+        <form id="edit-employee-form" method="post" action="{{ url_for('admin.update_employee') }}" data-validate="true">
+            <input type="hidden" id="edit-id" name="id">
+            <div class="form-group">
+                <label for="edit-name">Full Name:</label>
+                <input type="text" id="edit-name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="edit-position">Position:</label>
+                <input type="text" id="edit-position" name="position" required>
+            </div>
+            <div class="form-group">
+                <label for="edit-department">Department:</label>
+                <select id="edit-department" name="department" required>
+                    <option value="Management">Management</option>
+                    <option value="Front Desk">Front Desk</option>
+                    <option value="Housekeeping">Housekeeping</option>
+                    <option value="Food Service">Food Service</option>
+                    <option value="Maintenance">Maintenance</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="edit-contact">Contact:</label>
+                <input type="text" id="edit-contact" name="contact" required>
+            </div>
+            <div class="form-group">
+                <label for="edit-salary">Salary:</label>
+                <input type="number" id="edit-salary" name="salary" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="edit-hire-date">Hire Date:</label>
+                <input type="date" id="edit-hire-date" name="hire_date">
+            </div>
+            <button type="submit" class="btn btn-primary">Update Employee</button>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-confirmation-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Confirm Deletion</h3>
+        <p>Are you sure you want to delete this employee? This action cannot be undone.</p>
+        <form id="delete-employee-form" method="post" action="{{ url_for('admin.delete_employee') }}">
+            <input type="hidden" id="delete-id" name="id">
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary cancel-delete">Cancel</button>
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Department filter
+        const departmentFilter = document.getElementById('department-filter');
+        const employeeRows = document.querySelectorAll('#employees-table tbody tr');
+        
+        departmentFilter.addEventListener('change', function() {
+            const selectedDepartment = this.value;
+            
+            employeeRows.forEach(row => {
+                if (selectedDepartment === 'all' || row.getAttribute('data-department') === selectedDepartment) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+        
+        // Employee search
+        const searchInput = document.getElementById('employee-search');
+        const searchBtn = document.getElementById('search-btn');
+        
+        function searchEmployees() {
+            const searchText = searchInput.value.toLowerCase().trim();
+            
+            if (searchText === '') {
+                // If search is empty, reset to department filter
+                departmentFilter.dispatchEvent(new Event('change'));
+                return;
+            }
+            
+            employeeRows.forEach(row => {
+                const name = row.cells[1].textContent.toLowerCase();
+                const position = row.cells[2].textContent.toLowerCase();
+                const department = row.cells[3].textContent.toLowerCase();
+                
+                if (name.includes(searchText) || 
+                    position.includes(searchText) || 
+                    department.includes(searchText)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        searchBtn.addEventListener('click', searchEmployees);
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchEmployees();
+            }
+        });
+        
+        // Edit employee functionality
+        const editButtons = document.querySelectorAll('.edit-employee');
+        const editModal = document.getElementById('edit-employee-modal');
+        const editForm = document.getElementById('edit-employee-form');
+        const editCloseBtn = editModal.querySelector('.close');
+        
+        editButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const employeeId = this.getAttribute('data-id');
+                const row = this.closest('tr');
+                
+                // Populate form with employee data
+                document.getElementById('edit-id').value = employeeId;
+                document.getElementById('edit-name').value = row.cells[1].textContent;
+                document.getElementById('edit-position').value = row.cells[2].textContent;
+                document.getElementById('edit-department').value = row.cells[3].textContent;
+                document.getElementById('edit-contact').value = row.cells[4].textContent;
+                document.getElementById('edit-hire-date').value = formatDate(row.cells[5].textContent);
+                
+                // Show the modal
+                editModal.style.display = 'block';
+            });
+        });
+        
+        editCloseBtn.addEventListener('click', function() {
+            editModal.style.display = 'none';
+        });
+        
+        // Delete employee functionality
+        const deleteButtons = document.querySelectorAll('.delete-employee');
+        const deleteModal = document.getElementById('delete-confirmation-modal');
+        const deleteForm = document.getElementById('delete-employee-form');
+        const deleteCloseBtn = deleteModal.querySelector('.close');
+        const cancelDeleteBtn = deleteModal.querySelector('.cancel-delete');
+        
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const employeeId = this.getAttribute('data-id');
+                document.getElementById('delete-id').value = employeeId;
+                
+                // Show the modal
+                deleteModal.style.display = 'block';
+            });
+        });
+        
+        deleteCloseBtn.addEventListener('click', function() {
+            deleteModal.style.display = 'none';
+        });
+        
+        cancelDeleteBtn.addEventListener('click', function() {
+            deleteModal.style.display = 'none';
+        });
+        
+        // Close modals when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === editModal) {
+                editModal.style.display = 'none';
+            }
+            if (event.target === deleteModal) {
+                deleteModal.style.display = 'none';
+            }
+        });
+        
+        // Helper function to format date for input
+        function formatDate(dateString) {
+            // This is a simple implementation - you may need to adjust based on your date format
+            try {
+                const date = new Date(dateString);
+                return date.toISOString().split('T')[0];
+            } catch (e) {
+                return '';
+            }
+        }
+    });
+</script>
+{% endblock %}

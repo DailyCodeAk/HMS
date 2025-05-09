@@ -1,0 +1,213 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Manage Food Menu{% endblock %}
+
+{% block content %}
+<section class="admin-section">
+    <h2>Manage Food Menu</h2>
+    
+    <div class="form-container">
+        <h3>Add New Menu Item</h3>
+        <form method="post" action="{{ url_for('admin_add_menu_item') }}">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="price">Price:</label>
+                <input type="number" id="price" name="price" min="0.01" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label for="category">Category:</label>
+                <select id="category" name="category" required>
+                    <option value="Breakfast">Breakfast</option>
+                    <option value="Lunch">Lunch</option>
+                    <option value="Dinner">Dinner</option>
+                    <option value="Dessert">Dessert</option>
+                    <option value="Beverages">Beverages</option>
+                </select>
+            </div>
+            <div class="form-group checkbox-group">
+                <label>Dietary Options:</label>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="is_vegetarian" name="is_vegetarian" value="1">
+                    <label for="is_vegetarian">Vegetarian</label>
+                </div>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="is_vegan" name="is_vegan" value="1">
+                    <label for="is_vegan">Vegan</label>
+                </div>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="is_gluten_free" name="is_gluten_free" value="1">
+                    <label for="is_gluten_free">Gluten-Free</label>
+                </div>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="is_special" name="is_special" value="1">
+                    <label for="is_special">Daily Special</label>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Menu Item</button>
+        </form>
+    </div>
+    
+    <div class="tabs-container">
+        <div class="tabs">
+            <button class="tab-btn active" data-category="all">All</button>
+            <button class="tab-btn" data-category="Breakfast">Breakfast</button>
+            <button class="tab-btn" data-category="Lunch">Lunch</button>
+            <button class="tab-btn" data-category="Dinner">Dinner</button>
+            <button class="tab-btn" data-category="Dessert">Dessert</button>
+            <button class="tab-btn" data-category="Beverages">Beverages</button>
+        </div>
+        
+        <div class="data-table-container">
+            <h3>Menu Items</h3>
+            <table class="data-table" id="menu-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Price</th>
+                        <th>Category</th>
+                        <th>Dietary</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in menu_items %}
+                    <tr data-category="{{ item.category }}">
+                        <td>{{ item.id }}</td>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.description }}</td>
+                        <td>${{ "%.2f"|format(item.price) }}</td>
+                        <td>{{ item.category }}</td>
+                        <td>
+                            {% if item.is_vegetarian %}V{% endif %}
+                            {% if item.is_vegan %}VG{% endif %}
+                            {% if item.is_gluten_free %}GF{% endif %}
+                            {% if item.is_special %}<span class="badge">Special</span>{% endif %}
+                        </td>
+                        <td>{{ "Available" if item.available else "Unavailable" }}</td>
+                        <td>
+                            <button class="btn btn-small edit-menu-item" data-id="{{ item.id }}">Edit</button>
+                            <button class="btn btn-small {{ 'btn-danger' if item.available else 'btn-secondary' }} toggle-availability" data-id="{{ item.id }}" data-available="{{ item.available }}">
+                                {{ "Disable" if item.available else "Enable" }}
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8">No menu items found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tab functionality
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const menuTable = document.getElementById('menu-table');
+        const tableRows = menuTable.querySelectorAll('tbody tr');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                const category = this.getAttribute('data-category');
+                
+                // Show/hide rows based on category
+                tableRows.forEach(row => {
+                    if (category === 'all' || row.getAttribute('data-category') === category) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        });
+        
+        // Edit menu item
+        const editButtons = document.querySelectorAll('.edit-menu-item');
+        editButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const itemId = this.getAttribute('data-id');
+                const row = this.closest('tr');
+                const name = row.cells[1].textContent;
+                const description = row.cells[2].textContent;
+                const price = parseFloat(row.cells[3].textContent.replace('$', ''));
+                const category = row.cells[4].textContent;
+                
+                // Create edit modal
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <h3>Edit Menu Item</h3>
+                        <form id="edit-menu-form">
+                            <input type="hidden" id="edit-id" name="id" value="${itemId}">
+                            <div class="form-group">
+                                <label for="edit-name">Name:</label>
+                                <input type="text" id="edit-name" name="name" value="${name}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-description">Description:</label>
+                                <textarea id="edit-description" name="description" required>${description}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-price">Price:</label>
+                                <input type="number" id="edit-price" name="price" min="0.01" step="0.01" value="${price}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-category">Category:</label>
+                                <select id="edit-category" name="category" required>
+                                    <option value="Breakfast" ${category === 'Breakfast' ? 'selected' : ''}>Breakfast</option>
+                                    <option value="Lunch" ${category === 'Lunch' ? 'selected' : ''}>Lunch</option>
+                                    <option value="Dinner" ${category === 'Dinner' ? 'selected' : ''}>Dinner</option>
+                                    <option value="Dessert" ${category === 'Dessert' ? 'selected' : ''}>Dessert</option>
+                                    <option value="Beverages" ${category === 'Beverages' ? 'selected' : ''}>Beverages</option>
+                                </select>
+                            </div>
+                            <div class="form-group checkbox-group">
+                                <label>Dietary Options:</label>
+                                <div class="checkbox-container">
+                                    <input type="checkbox" id="edit-is_vegetarian" name="is_vegetarian" value="1">
+                                    <label for="edit-is_vegetarian">Vegetarian</label>
+                                </div>
+                                <div class="checkbox-container">
+                                    <input type="checkbox" id="edit-is_vegan" name="is_vegan" value="1">
+                                    <label for="edit-is_vegan">Vegan</label>
+                                </div>
+                                <div class="checkbox-container">
+                                    <input type="checkbox" id="edit-is_gluten_free" name="is_gluten_free" value="1">
+                                    <label for="edit-is_gluten_free">Gluten-Free</label>
+                                </div>
+                                <div class="checkbox-container">
+                                    <input type="checkbox" id="edit-is_special" name="is_special" value="1">
+                                    <label for="edit-is_special">Daily Special</label>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Update Item</button>
+                        </form>
+                    </div>
+                </div>`;
+            });
+        });
+    });
+</script>
+{% endblock %}

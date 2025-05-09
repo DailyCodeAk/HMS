@@ -1,0 +1,70 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Housekeeping Management{% endblock %}
+
+{% block content %}
+<section class="admin-section">
+    <h2>Housekeeping Management</h2>
+    
+    <div class="form-container">
+        <h3>Assign Housekeeping Task</h3>
+        <form method="post" action="{{ url_for('assign_housekeeping') }}">
+            <div class="form-group">
+                <label for="room_id">Room:</label>
+                <select id="room_id" name="room_id" required>
+                    {% for room in rooms %}
+                    <option value="{{ room.id }}">{{ room.room_number }} ({{ room.type }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="employee_id">Employee:</label>
+                <select id="employee_id" name="employee_id" required>
+                    {% for employee in employees %}
+                    <option value="{{ employee.id }}">{{ employee.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="date">Date:</label>
+                <input type="date" id="date" name="date" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Assign Task</button>
+        </form>
+    </div>
+    
+    <div class="data-table-container">
+        <h3>Housekeeping Tasks</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Room Number</th>
+                    <th>Employee</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in housekeeping %}
+                <tr>
+                    <td>{{ task.id }}</td>
+                    <td>{{ task.room_number }}</td>
+                    <td>{{ task.employee_name }}</td>
+                    <td>{{ task.status }}</td>
+                    <td>{{ task.date }}</td>
+                    <td>
+                        <button class="btn btn-small update-status" data-id="{{ task.id }}">Update Status</button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6">No housekeeping tasks found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

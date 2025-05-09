@@ -1,0 +1,41 @@
+{% extends "user/layout.html" %}
+
+{% block title %}Room Service{% endblock %}
+
+{% block content %}
+<section class="room-service-section">
+    <h2>Request Room Service</h2>
+    
+    {% if bookings %}
+    <div class="form-container">
+        <form method="post">
+            <div class="form-group">
+                <label for="booking_id">Select Room:</label>
+                <select id="booking_id" name="booking_id" required>
+                    {% for booking in bookings %}
+                    <option value="{{ booking.id }}" {% if request.args.get('booking_id') == booking.id|string %}selected{% endif %}>Room {{ booking.room_number }} ({{ booking.type }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="service_type">Service Type:</label>
+                <select id="service_type" name="service_type" required>
+                    <option value="Food">Food</option>
+                    <option value="Cleaning">Cleaning</option>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Amenities">Amenities</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="notes">Notes/Request Details:</label>
+                <textarea id="notes" name="notes" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit Request</button>
+        </form>
+    </div>
+    {% else %}
+    <p>You don't have any active bookings. <a href="{{ url_for('user_booking') }}">Book a room</a> to request room service.</p>
+    {% endif %}
+</section>
+{% endblock %}

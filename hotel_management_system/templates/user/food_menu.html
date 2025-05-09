@@ -1,0 +1,182 @@
+{% extends "user/layout.html" %}
+
+{% block title %}Food Menu{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/food_menu.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="food-menu-section">
+    <h2>Hotel Restaurant Menu</h2>
+    
+    <div class="menu-search">
+        <form method="get" action="{{ url_for('user_food_menu') }}">
+            <div class="search-container">
+                <input type="text" name="query" placeholder="Search menu..." value="{{ request.args.get('query', '') }}">
+                <button type="submit" class="btn">Search</button>
+            </div>
+            <div class="filter-container">
+                <div class="filter-group">
+                    <label for="category-select">Category:</label>
+                    <select id="category-select" name="category">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                        <option value="{{ category }}" {% if request.args.get('category') == category %}selected{% endif %}>{{ category }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group dietary-filters">
+                    <label>Dietary Requirements:</label>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="vegetarian" name="dietary" value="vegetarian" {% if 'vegetarian' in dietary_filters %}checked{% endif %}>
+                        <label for="vegetarian">Vegetarian</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="vegan" name="dietary" value="vegan" {% if 'vegan' in dietary_filters %}checked{% endif %}>
+                        <label for="vegan">Vegan</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="gluten_free" name="dietary" value="gluten_free" {% if 'gluten_free' in dietary_filters %}checked{% endif %}>
+                        <label for="gluten_free">Gluten-Free</label>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    {% if daily_specials %}
+    <div class="daily-specials">
+        <h3>Today's Specials</h3>
+        <div class="menu-items">
+            {% for item in daily_specials %}
+            <div class="menu-item">
+                <div class="menu-item-header">
+                    <h4>{{ item.name }}</h4>
+                    <span class="price">${{ "%.2f"|format(item.price) }}</span>
+                </div>
+                <p class="description">{{ item.description }}</p>
+                <div class="menu-item-footer">
+                    <div class="dietary-icons">
+                        {% if item.is_vegetarian %}<span class="dietary-icon" title="Vegetarian">V</span>{% endif %}
+                        {% if item.is_vegan %}<span class="dietary-icon" title="Vegan">VG</span>{% endif %}
+                        {% if item.is_gluten_free %}<span class="dietary-icon" title="Gluten-Free">GF</span>{% endif %}
+                    </div>
+                    {% if is_logged_in %}
+                    <button class="btn btn-small add-to-order" data-id="{{ item.id }}" data-name="{{ item.name }}" data-price="{{ item.price }}">Add to Order</button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="menu-tabs">
+        <div class="tabs">
+            <button class="tab-btn active" data-category="all">All</button>
+            {% for category in categories %}
+            <button class="tab-btn" data-category="{{ category }}">{{ category }}</button>
+            {% endfor %}
+        </div>
+        
+        <div class="menu-content">
+            {% for category in categories %}
+            <div class="menu-category" data-category="{{ category }}">
+                <h3>{{ category }}</h3>
+                <div class="menu-items">
+                    {% for item in menu_items if item.category == category %}
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h4>{{ item.name }}</h4>
+                            <span class="price">${{ "%.2f"|format(item.price) }}</span>
+                        </div>
+                        <p class="description">{{ item.description }}</p>
+                        <div class="menu-item-footer">
+                            <div class="dietary-icons">
+                                {% if item.is_vegetarian %}<span class="dietary-icon" title="Vegetarian">V</span>{% endif %}
+                                {% if item.is_vegan %}<span class="dietary-icon" title="Vegan">VG</span>{% endif %}
+                                {% if item.is_gluten_free %}<span class="dietary-icon" title="Gluten-Free">GF</span>{% endif %}
+                            </div>
+                            {% if is_logged_in %}
+                            <button class="btn btn-small add-to-order" data-id="{{ item.id }}" data-name="{{ item.name }}" data-price="{{ item.price }}">Add to Order</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    {% if is_logged_in %}
+    <div id="order-summary" class="order-summary">
+        <h3>Your Order</h3>
+        <div id="order-items" class="order-items">
+            <!-- Order items will be added here -->
+        </div>
+        <div class="order-total">
+            <strong>Total: $<span id="order-total">0.00</span></strong>
+        </div>
+        <div class="order-actions">
+            <button id="clear-order" class="btn btn-secondary">Clear</button>
+            <button id="place-order" class="btn btn-primary">Place Order</button>
+        </div>
+    </div>
+    
+    <div id="order-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Complete Your Order</h3>
+            <form id="complete-order-form" method="post" action="{{ url_for('user_place_order') }}">
+                <div class="form-group">
+                    <label for="order-type">Order Type:</label>
+                    <select id="order-type" name="order_type" required>
+                        <option value="restaurant">Restaurant</option>
+                        <option value="room_service">Room Service</option>
+                    </select>
+                </div>
+                
+                <div id="restaurant-fields" class="conditional-fields">
+                    <div class="form-group">
+                        <label for="table-number">Table Number:</label>
+                        <input type="text" id="table-number" name="table_number">
+                    </div>
+                </div>
+                
+                <div id="room-service-fields" class="conditional-fields">
+                    <div class="form-group">
+                        <label for="booking-id">Room:</label>
+                        <select id="booking-id" name="booking_id">
+                            {% for booking in active_bookings %}
+                            <option value="{{ booking.id }}">Room {{ booking.room_number }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="special-requests">Special Requests:</label>
+                    <textarea id="special-requests" name="special_requests"></textarea>
+                </div>
+                
+                <div id="order-summary-hidden">
+                    <!-- Hidden fields for order items will be added here -->
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Confirm Order</button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="login-prompt">
+        <p>Please <a href="{{ url_for('user_login') }}">login</a> to place an order.</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/food_menu.js') }}"></script>
+{% endblock %}

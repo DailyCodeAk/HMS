@@ -1,0 +1,100 @@
+{% extends "user/layout.html" %}
+
+{% block title %}Book a Room{% endblock %}
+
+{% block content %}
+<section class="booking-section">
+    <h2>Book a Room</h2>
+    
+    <div class="form-container">
+        <form method="post">
+            <div class="form-group">
+                <label for="check_in">Check-in Date:</label>
+                <input type="date" id="check_in" name="check_in" required>
+            </div>
+            <div class="form-group">
+                <label for="check_out">Check-out Date:</label>
+                <input type="date" id="check_out" name="check_out" required>
+            </div>
+            <div class="form-group">
+                <label for="room_type">Room Type:</label>
+                <select id="room_type">
+                    <option value="all">All Types</option>
+                    <option value="Standard">Standard</option>
+                    <option value="Deluxe">Deluxe</option>
+                    <option value="Suite">Suite</option>
+                </select>
+            </div>
+            
+            <div class="room-selection">
+                <h3>Available Rooms</h3>
+                <div class="room-cards">
+                    {% for room in rooms %}
+                    <div class="room-card" data-type="{{ room.type }}">
+                        <div class="room-info">
+                            <h4>{{ room.room_number }} - {{ room.type }}</h4>
+                            <p>Capacity: {{ room.capacity }} persons</p>
+                            <p class="room-price">${{ room.price }} / night</p>
+                        </div>
+                        <div class="room-actions">
+                            <input type="radio" id="room_{{ room.id }}" name="room_id" value="{{ room.id }}" required>
+                            <label for="room_{{ room.id }}" class="btn btn-select">Select</label>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p>No rooms available for the selected dates.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Book Now</button>
+        </form>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const roomTypeSelect = document.getElementById('room_type');
+        const roomCards = document.querySelectorAll('.room-card');
+        
+        roomTypeSelect.addEventListener('change', function() {
+            const selectedType = this.value;
+            
+            roomCards.forEach(card => {
+                if (selectedType === 'all' || card.dataset.type === selectedType) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+        
+        // Set min date for check-in and check-out
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+        
+        const checkIn = document.getElementById('check_in');
+        const checkOut = document.getElementById('check_out');
+        
+        checkIn.min = today.toISOString().split('T')[0];
+        checkOut.min = tomorrow.toISOString().split('T')[0];
+        
+        // Update min check-out date when check-in date changes
+        checkIn.addEventListener('change', function() {
+            const selectedDate = new Date(this.value);
+            const nextDay = new Date(selectedDate);
+            nextDay.setDate(selectedDate.getDate() + 1);
+            
+            checkOut.min = nextDay.toISOString().split('T')[0];
+            
+            // If check-out date is before new min date, update it
+            if (new Date(checkOut.value) <= selectedDate) {
+                checkOut.value = nextDay.toISOString().split('T')[0];
+            }
+        });
+    });
+</script>
+{% endblock %}

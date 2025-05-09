@@ -1,0 +1,575 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Manage Food Orders{% endblock %}
+
+{% block content %}
+<section class="admin-section">
+    <h2>Manage Food Orders</h2>
+    
+    <div class="stats-summary">
+        <div class="stat-card">
+            <h3>Pending</h3>
+            <p class="stat-number">{{ stats.pending }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Preparing</h3>
+            <p class="stat-number">{{ stats.preparing }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Ready</h3>
+            <p class="stat-number">{{ stats.ready }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Delivered</h3>
+            <p class="stat-number">{{ stats.delivered }}</p>
+        </div>
+    </div>
+    
+    <div class="tabs-container">
+        <div class="tabs status-tabs" data-tab-group="orders">
+            <button class="tab-btn active" data-status="all">All Orders</button>
+            <button class="tab-btn" data-status="pending">Pending</button>
+            <button class="tab-btn" data-status="preparing">Preparing</button>
+            <button class="tab-btn" data-status="ready">Ready</button>
+            <button class="tab-btn" data-status="delivered">Delivered</button>
+            <button class="tab-btn" data-status="cancelled">Cancelled</button>
+        </div>
+        
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label for="order-type">Order Type:</label>
+                <select id="order-type">
+                    <option value="all">All Types</option>
+                    <option value="restaurant">Restaurant</option>
+                    <option value="room_service">Room Service</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="date-filter">Date:</label>
+                <input type="date" id="date-filter" value="{{ today_date }}">
+                <button id="date-filter-btn" class="btn btn-small">Filter</button>
+                <button id="reset-filter-btn" class="btn btn-small">Reset</button>
+            </div>
+            <div class="search-group">
+                <input type="text" id="order-search" placeholder="Search guest name...">
+                <button id="search-btn" class="btn btn-small">Search</button>
+            </div>
+        </div>
+        
+        <div class="data-table-container" data-tab-content="orders">
+            <table class="data-table" id="orders-table" data-sortable="true">
+                <thead>
+                    <tr>
+                        <th data-sortable>ID</th>
+                        <th data-sortable>Guest</th>
+                        <th data-sortable>Type</th>
+                        <th data-sortable>Location</th>
+                        <th>Items</th>
+                        <th data-sortable>Total</th>
+                        <th data-sortable>Order Time</th>
+                        <th data-sortable>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr data-status="{{ order.status }}" data-type="{{ 'room_service' if order.is_room_service else 'restaurant' }}">
+                        <td>{{ order.id }}</td>
+                        <td>{{ order.guest_name }}</td>
+                        <td>{{ "Room Service" if order.is_room_service else "Restaurant" }}</td>
+                        <td>
+                            {% if order.is_room_service %}
+                            Room {{ order.room_number }}
+                            {% else %}
+                            Table {{ order.table_number if order.table_number else "N/A" }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-small view-items" data-id="{{ order.id }}">View Items</button>
+                        </td>
+                        <td>${{ "%.2f"|format(order.total) }}</td>
+                        <td>{{ order.order_time }}</td>
+                        <td>
+                            <span class="status-tag {{ order.status }}">{{ order.status|capitalize }}</span>
+                        </td>
+                        <td>
+                            {% if order.status == 'pending' %}
+                            <button type="button" class="btn btn-small update-status" data-id="{{ order.id }}" data-status="preparing">Start Preparing</button>
+                            {% elif order.status == 'preparing' %}
+                            <button type="button" class="btn btn-small update-status" data-id="{{ order.id }}" data-status="ready">Mark Ready</button>
+                            {% elif order.status == 'ready' %}
+                            <button type="button" class="btn btn-small update-status" data-id="{{ order.id }}" data-status="delivered">Mark Delivered</button>
+                            {% endif %}
+                            
+                            {% if order.status in ['pending', 'preparing'] %}
+                            <button type="button" class="btn btn-small btn-danger update-status" data-id="{{ order.id }}" data-status="cancelled">Cancel</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9">No orders found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Pagination -->
+    {% if pages > 1 %}
+    <div class="pagination">
+        <span>Page {{ current_page }} of {{ pages }}</span>
+        {% if current_page > 1 %}
+        <a href="{{ url_for('food.admin_orders', page=current_page-1) }}" class="btn btn-small">Previous</a>
+        {% endif %}
+        {% if current_page < pages %}
+        <a href="{{ url_for('food.admin_orders', page=current_page+1) }}" class="btn btn-small">Next</a>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- Kitchen Dashboard -->
+    <div class="kitchen-dashboard">
+        <h3>Kitchen Dashboard</h3>
+        
+        <div class="order-lanes">
+            <div class="order-lane" id="pending-lane">
+                <h4>Pending</h4>
+                <div class="order-cards">
+                    {% for order in pending_orders %}
+                    <div class="order-card" data-id="{{ order.id }}">
+                        <div class="order-header">
+                            <span class="order-id">#{{ order.id }}</span>
+                            <span class="order-time">{{ order.order_time }}</span>
+                        </div>
+                        <div class="order-type">
+                            {{ "Room Service" if order.is_room_service else "Restaurant" }}:
+                            {% if order.is_room_service %}
+                            Room {{ order.room_number }}
+                            {% else %}
+                            Table {{ order.table_number if order.table_number else "N/A" }}
+                            {% endif %}
+                        </div>
+                        <div class="order-items-preview">
+                            <ul>
+                                <li>
+                                    {% for item in order.items[:3] %}
+                                    {{ item.quantity }}x {{ item.name }}
+                                    {% endfor %}
+                                    {% if order.items|length > 3 %}
+                                    + {{ order.items|length - 3 }} more items
+                                    {% endif %}
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="order-actions">
+                            <button type="button" class="btn btn-small update-status" data-id="{{ order.id }}" data-status="preparing">Start Preparing</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="order-lane" id="preparing-lane">
+                <h4>Preparing</h4>
+                <div class="order-cards">
+                    {% for order in preparing_orders %}
+                    <div class="order-card" data-id="{{ order.id }}">
+                        <div class="order-header">
+                            <span class="order-id">#{{ order.id }}</span>
+                            <span class="order-time">{{ order.order_time }}</span>
+                        </div>
+                        <div class="order-type">
+                            {{ "Room Service" if order.is_room_service else "Restaurant" }}:
+                            {% if order.is_room_service %}
+                            Room {{ order.room_number }}
+                            {% else %}
+                            Table {{ order.table_number if order.table_number else "N/A" }}
+                            {% endif %}
+                        </div>
+                        <div class="order-items-preview">
+                            <ul>
+                                <li>
+                                    {% for item in order.items[:3] %}
+                                    {{ item.quantity }}x {{ item.name }}
+                                    {% endfor %}
+                                    {% if order.items|length > 3 %}
+                                    + {{ order.items|length - 3 }} more items
+                                    {% endif %}
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="order-actions">
+                            <button type="button" class="btn btn-small update-status" data-id="{{ order.id }}" data-status="ready">Mark Ready</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="order-lane" id="ready-lane">
+                <h4>Ready for Delivery</h4>
+                <div class="order-cards">
+                    {% for order in ready_orders %}
+                    <div class="order-card" data-id="{{ order.id }}">
+                        <div class="order-header">
+                            <span class="order-id">#{{ order.id }}</span>
+                            <span class="order-time">{{ order.order_time }}</span>
+                        </div>
+                        <div class="order-type">
+                            {{ "Room Service" if order.is_room_service else "Restaurant" }}:
+                            {% if order.is_room_service %}
+                            Room {{ order.room_number }}
+                            {% else %}
+                            Table {{ order.table_number if order.table_number else "N/A" }}
+                            {% endif %}
+                        </div>
+                        <div class="order-items-preview">
+                            <ul>
+                                <li>
+                                    {% for item in order.items[:3] %}
+                                    {{ item.quantity }}x {{ item.name }}
+                                    {% endfor %}
+                                    {% if order.items|length > 3 %}
+                                    + {{ order.items|length - 3 }} more items
+                                    {% endif %}
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="order-actions">
+                            <button type="button" class="btn btn-small update-status" data-id="{{ order.id }}" data-status="delivered">Mark Delivered</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Items Modal -->
+<div id="items-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Order Items</h3>
+        <div id="items-container">
+            <!-- Items will be loaded here via JavaScript -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tab switching for order status
+        const statusTabs = document.querySelectorAll('.status-tabs .tab-btn');
+        const orderRows = document.querySelectorAll('#orders-table tbody tr');
+        
+        statusTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const status = this.getAttribute('data-status');
+                
+                // Update active tab
+                statusTabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Filter order rows
+                orderRows.forEach(row => {
+                    if (status === 'all' || row.getAttribute('data-status') === status) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        });
+        
+        // Order type filter
+        const orderTypeFilter = document.getElementById('order-type');
+        orderTypeFilter.addEventListener('change', function() {
+            const orderType = this.value;
+            const status = document.querySelector('.status-tabs .tab-btn.active').getAttribute('data-status');
+            
+            orderRows.forEach(row => {
+                const rowStatus = row.getAttribute('data-status');
+                const rowType = row.getAttribute('data-type');
+                
+                const statusMatch = status === 'all' || rowStatus === status;
+                const typeMatch = orderType === 'all' || rowType === orderType;
+                
+                if (statusMatch && typeMatch) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+        
+        // Date filter
+        const dateFilter = document.getElementById('date-filter');
+        const dateFilterBtn = document.getElementById('date-filter-btn');
+        const resetFilterBtn = document.getElementById('reset-filter-btn');
+        
+        dateFilterBtn.addEventListener('click', function() {
+            const filterDate = dateFilter.value;
+            if (!filterDate) return;
+            
+            orderRows.forEach(row => {
+                const orderDate = row.cells[6].textContent.split(' ')[0]; // Extract date part
+                
+                if (orderDate === filterDate) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+        
+        resetFilterBtn.addEventListener('click', function() {
+            // Reset to current tab and order type filter
+            const status = document.querySelector('.status-tabs .tab-btn.active').getAttribute('data-status');
+            const orderType = orderTypeFilter.value;
+            
+            orderRows.forEach(row => {
+                const rowStatus = row.getAttribute('data-status');
+                const rowType = row.getAttribute('data-type');
+                
+                const statusMatch = status === 'all' || rowStatus === status;
+                const typeMatch = orderType === 'all' || rowType === orderType;
+                
+                if (statusMatch && typeMatch) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+        
+        // Order search
+        const searchInput = document.getElementById('order-search');
+        const searchBtn = document.getElementById('search-btn');
+        
+        function searchOrders() {
+            const searchText = searchInput.value.toLowerCase().trim();
+            
+            if (searchText === '') {
+                // Reset to current filters
+                resetFilterBtn.click();
+                return;
+            }
+            
+            orderRows.forEach(row => {
+                const guestName = row.cells[1].textContent.toLowerCase();
+                
+                if (guestName.includes(searchText)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        searchBtn.addEventListener('click', searchOrders);
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchOrders();
+            }
+        });
+        
+        // View order items
+        const viewItemsButtons = document.querySelectorAll('.view-items');
+        const itemsModal = document.getElementById('items-modal');
+        const itemsContainer = document.getElementById('items-container');
+        const closeModalBtn = itemsModal.querySelector('.close');
+        
+        viewItemsButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const orderId = this.getAttribute('data-id');
+                
+                // Here you would typically fetch items via AJAX
+                // For demo, we'll simulate a successful fetch
+                
+                // Get data from the row
+                const row = this.closest('tr');
+                const guestName = row.cells[1].textContent;
+                const orderType = row.cells[2].textContent;
+                const location = row.cells[3].textContent;
+                const total = row.cells[5].textContent;
+                
+                // Show the modal with loading state
+                itemsModal.style.display = 'block';
+                itemsContainer.innerHTML = `
+                    <p><strong>Order #${orderId}</strong></p>
+                    <p><strong>Guest:</strong> ${guestName}</p>
+                    <p><strong>Type:</strong> ${orderType}</p>
+                    <p><strong>Location:</strong> ${location}</p>
+                    <p>Loading items...</p>
+                `;
+                
+                // Simulate loading items
+                setTimeout(() => {
+                    // Mock items - in a real app, these would come from the server
+                    const mockItems = [
+                        { name: 'Cheeseburger', quantity: 2, price: 17.99 },
+                        { name: 'French Fries', quantity: 1, price: 5.99 },
+                        { name: 'Soft Drink', quantity: 2, price: 2.99 }
+                    ];
+                    
+                    let itemsHTML = `
+                        <p><strong>Order #${orderId}</strong></p>
+                        <p><strong>Guest:</strong> ${guestName}</p>
+                        <p><strong>Type:</strong> ${orderType}</p>
+                        <p><strong>Location:</strong> ${location}</p>
+                    `;
+                    
+                    itemsHTML += `
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    let subtotal = 0;
+                    mockItems.forEach(item => {
+                        const itemTotal = item.price * item.quantity;
+                        subtotal += itemTotal;
+                        
+                        itemsHTML += `
+                            <tr>
+                                <td>${item.name}</td>
+                                <td>${item.quantity}</td>
+                                <td>$${item.price.toFixed(2)}</td>
+                                <td>$${itemTotal.toFixed(2)}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    itemsHTML += `
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3"><strong>Total</strong></td>
+                                    <td><strong>${total}</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    `;
+                    
+                    // Add special requests if any
+                    itemsHTML += `
+                        <div class="special-requests">
+                            <h4>Special Requests</h4>
+                            <p>No ketchup on the burger. Extra napkins please.</p>
+                        </div>
+                    `;
+                    
+                    itemsContainer.innerHTML = itemsHTML;
+                }, 500);
+            });
+        });
+        
+        closeModalBtn.addEventListener('click', function() {
+            itemsModal.style.display = 'none';
+        });
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === itemsModal) {
+                itemsModal.style.display = 'none';
+            }
+        });
+        
+        // Update order status
+        const updateStatusButtons = document.querySelectorAll('.update-status');
+        
+        updateStatusButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const orderId = this.getAttribute('data-id');
+                const newStatus = this.getAttribute('data-status');
+                
+                // If cancelling, confirm first
+                if (newStatus === 'cancelled') {
+                    if (!confirm('Are you sure you want to cancel this order?')) {
+                        return;
+                    }
+                }
+                
+                // Here you would typically update via AJAX
+                // For demo, we'll submit a form
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ url_for("food.admin_update_order_status") }}';
+                form.style.display = 'none';
+                
+                const orderIdInput = document.createElement('input');
+                orderIdInput.type = 'hidden';
+                orderIdInput.name = 'order_id';
+                orderIdInput.value = orderId;
+                
+                const statusInput = document.createElement('input');
+                statusInput.type = 'hidden';
+                statusInput.name = 'status';
+                statusInput.value = newStatus;
+                
+                form.appendChild(orderIdInput);
+                form.appendChild(statusInput);
+                document.body.appendChild(form);
+                
+                form.submit();
+            });
+        });
+        
+        // Drag and drop for kitchen dashboard
+        const orderCards = document.querySelectorAll('.order-card');
+        const orderLanes = document.querySelectorAll('.order-lane');
+        
+        orderCards.forEach(card => {
+            card.setAttribute('draggable', true);
+            
+            card.addEventListener('dragstart', function(e) {
+                e.dataTransfer.setData('text/plain', this.getAttribute('data-id'));
+                this.classList.add('dragging');
+            });
+            
+            card.addEventListener('dragend', function() {
+                this.classList.remove('dragging');
+            });
+        });
+        
+        orderLanes.forEach(lane => {
+            lane.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('dragover');
+            });
+            
+            lane.addEventListener('dragleave', function() {
+                this.classList.remove('dragover');
+            });
+            
+            lane.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+                
+                const orderId = e.dataTransfer.getData('text/plain');
+                const targetLane = this.id.split('-')[0]; // Extract status from lane id
+                
+                // Here you would typically update via AJAX
+                // For demo, we'll simulate a successful update
+                alert(`Order ${orderId} moved to ${targetLane}`);
+                
+                // In a real app, you'd call the appropriate update function
+                // updateOrderStatus(orderId, targetLane);
+            });
+        });
+    });
+</script>
+{% endblock %}

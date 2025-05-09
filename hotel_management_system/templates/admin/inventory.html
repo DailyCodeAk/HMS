@@ -1,0 +1,120 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Inventory Management{% endblock %}
+
+{% block content %}
+<section class="admin-section">
+    <h2>Inventory Management</h2>
+    
+    <div class="grid-container">
+        <div class="form-container">
+            <h3>Add New Inventory Item</h3>
+            <form method="post" action="{{ url_for('add_inventory') }}">
+                <div class="form-group">
+                    <label for="item_name">Item Name:</label>
+                    <input type="text" id="item_name" name="item_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="quantity">Quantity:</label>
+                    <input type="number" id="quantity" name="quantity" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="category">Category:</label>
+                    <select id="category" name="category" required>
+                        <option value="Housekeeping">Housekeeping</option>
+                        <option value="Amenities">Amenities</option>
+                        <option value="Food">Food</option>
+                        <option value="Beverages">Beverages</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Office">Office</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Item</button>
+            </form>
+        </div>
+        
+        <div class="form-container">
+            <h3>Place New Order</h3>
+            <form method="post" action="{{ url_for('place_order') }}">
+                <div class="form-group">
+                    <label for="item_id">Item:</label>
+                    <select id="item_id" name="item_id" required>
+                        {% for item in inventory %}
+                        <option value="{{ item.id }}">{{ item.item_name }} (Current: {{ item.quantity }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="quantity">Quantity:</label>
+                    <input type="number" id="quantity" name="quantity" min="1" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Place Order</button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="data-table-container">
+        <h3>Inventory Items</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Item Name</th>
+                    <th>Quantity</th>
+                    <th>Category</th>
+                    <th>Last Updated</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in inventory %}
+                <tr>
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.item_name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.category }}</td>
+                    <td>{{ item.last_updated }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5">No inventory items found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="data-table-container">
+        <h3>Orders</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Item</th>
+                    <th>Quantity</th>
+                    <th>Status</th>
+                    <th>Order Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>{{ order.id }}</td>
+                    <td>{{ order.item_name }}</td>
+                    <td>{{ order.quantity }}</td>
+                    <td>{{ order.status }}</td>
+                    <td>{{ order.order_date }}</td>
+                    <td>
+                        <button class="btn btn-small update-order-status" data-id="{{ order.id }}">Update Status</button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6">No orders found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

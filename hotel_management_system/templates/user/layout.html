@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user.css') }}">
+{% endblock %}
+
+{% block navigation %}
+{% if session.role == 'user' %}
+<ul>
+    <li><a href="{{ url_for('user_dashboard') }}">Dashboard</a></li>
+    <li><a href="{{ url_for('user_booking') }}">Book a Room</a></li>
+    <li><a href="{{ url_for('user_room_service') }}">Room Service</a></li>
+    <li><a href="{{ url_for('user_logout') }}">Logout</a></li>
+    <li><a href="{{ url_for('user_profile') }}">Profile</a></li>
+</ul>
+{% endif %}
+{% endblock %}

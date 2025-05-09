@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Food Reports</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+    <style>
+        /* Specific styles for food reports page */
+        .report-card {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 16px;
+            margin-bottom: 16px;
+            background-color: #fff;
+        }
+        
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .report-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .report-date {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .report-content {
+            margin-bottom: 16px;
+        }
+        
+        .report-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .report-filter {
+            margin-bottom: 24px;
+        }
+        
+        .report-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background-color: #f5f5f5;
+            padding: 16px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            color: #666;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #f5f5f5;
+        }
+        
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background-color: #4285f4;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #f1f1f1;
+            color: #333;
+        }
+        
+        .btn-danger {
+            background-color: #ea4335;
+            color: white;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 24px;
+        }
+        
+        .page-link {
+            padding: 8px 12px;
+            margin: 0 4px;
+            border: 1px solid #ddd;
+            color: #333;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        
+        .page-link.active {
+            background-color: #4285f4;
+            color: white;
+            border-color: #4285f4;
+        }
+        
+        .modal {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <nav class="admin-sidebar">
+            <div class="admin-logo">
+                <h2>Admin Panel</h2>
+            </div>
+            <ul class="admin-menu">
+                <li><a href="/admin/dashboard">Dashboard</a></li>
+                <li><a href="/admin/users">Users</a></li>
+                <li><a href="/admin/food_reports" class="active">Food Reports</a></li>
+                <li><a href="/admin/settings">Settings</a></li>
+                <li><a href="/logout">Logout</a></li>
+            </ul>
+        </nav>
+        
+        <main class="admin-content">
+            <header class="admin-header">
+                <h1>Food Reports</h1>
+                <div class="user-info">
+                    <span class="username">Admin</span>
+                    <img src="https://via.placeholder.com/32" alt="Admin" class="avatar">
+                </div>
+            </header>
+            
+            <section class="admin-section">
+                <div class="report-stats">
+                    <div class="stat-card">
+                        <div class="stat-number">45</div>
+                        <div class="stat-label">Total Reports</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">12</div>
+                        <div class="stat-label">Pending Review</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">28</div>
+                        <div class="stat-label">Approved</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">5</div>
+                        <div class="stat-label">Rejected</div>
+                    </div>
+                </div>
+                
+                <div class="report-filter">
+                    <h3>Filter Reports</h3>
+                    <form action="/admin/food_reports" method="get">
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <label for="status">Status:</label>
+                                <select id="status" name="status">
+                                    <option value="">All</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="date_from">From:</label>
+                                <input type="date" id="date_from" name="date_from">
+                            </div>
+                            <div class="filter-group">
+                                <label for="date_to">To:</label>
+                                <input type="date" id="date_to" name="date_to">
+                            </div>
+                            <div class="filter-group">
+                                <label for="search">Search:</label>
+                                <input type="text" id="search" name="search" placeholder="Search reports...">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Apply Filters</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <h3>Food Reports List</h3>
+                <button class="btn btn-primary" id="add-report">Add New Report</button>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Submitted By</th>
+                            <th>Date</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>Monthly Nutrition Analysis</td>
+                            <td>john_doe</td>
+                            <td>2025-05-01</td>
+                            <td>Nutrition</td>
+                            <td><span class="status approved">Approved</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-secondary view-btn" data-id="1">View</button>
+                                    <button class="btn btn-primary edit-btn" data-id="1">Edit</button>
+                                    <button class="btn btn-danger delete-btn" data-id="1">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Allergen Incident Report</td>
+                            <td>sarah_smith</td>
+                            <td>2025-05-03</td>
+                            <td>Allergens</td>
+                            <td><span class="status pending">Pending</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-secondary view-btn" data-id="2">View</button>
+                                    <button class="btn btn-primary edit-btn" data-id="2">Edit</button>
+                                    <button class="btn btn-danger delete-btn" data-id="2">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>Quality Control Assessment</td>
+                            <td>mike_johnson</td>
+                            <td>2025-05-04</td>
+                            <td>Quality</td>
+                            <td><span class="status approved">Approved</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-secondary view-btn" data-id="3">View</button>
+                                    <button class="btn btn-primary edit-btn" data-id="3">Edit</button>
+                                    <button class="btn btn-danger delete-btn" data-id="3">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>Food Waste Analysis</td>
+                            <td>emily_brown</td>
+                            <td>2025-05-05</td>
+                            <td>Sustainability</td>
+                            <td><span class="status rejected">Rejected</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-secondary view-btn" data-id="4">View</button>
+                                    <button class="btn btn-primary edit-btn" data-id="4">Edit</button>
+                                    <button class="btn btn-danger delete-btn" data-id="4">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>Inventory Management Report</td>
+                            <td>david_wilson</td>
+                            <td>2025-05-06</td>
+                            <td>Inventory</td>
+                            <td><span class="status pending">Pending</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-secondary view-btn" data-id="5">View</button>
+                                    <button class="btn btn-primary edit-btn" data-id="5">Edit</button>
+                                    <button class="btn btn-danger delete-btn" data-id="5">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="pagination">
+                    <a href="#" class="page-link">&laquo;</a>
+                    <a href="#" class="page-link active">1</a>
+                    <a href="#" class="page-link">2</a>
+                    <a href="#" class="page-link">3</a>
+                    <a href="#" class="page-link">&raquo;</a>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <!-- Report Modal -->
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Report Details</h2>
+            <form id="reportForm">
+                <div class="form-group">
+                    <label for="report-title">Title:</label>
+                    <input type="text" id="report-title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="report-category">Category:</label>
+                    <select id="report-category" name="category" required>
+                        <option value="">Select Category</option>
+                        <option value="Nutrition">Nutrition</option>
+                        <option value="Allergens">Allergens</option>
+                        <option value="Quality">Quality</option>
+                        <option value="Sustainability">Sustainability</option>
+                        <option value="Inventory">Inventory</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="report-content">Content:</label>
+                    <textarea id="report-content" name="content" rows="10" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="report-status">Status:</label>
+                    <select id="report-status" name="status" required>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+                <div class="form-buttons">
+                    <button type="submit" class="btn btn-primary">Save Report</button>
+                    <button type="button" class="btn btn-secondary" id="cancel-report">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Modal functionality
+        const modal = document.getElementById('reportModal');
+        const addReportBtn = document.getElementById('add-report');
+        const closeBtn = document.querySelector('.close');
+        const cancelBtn = document.getElementById('cancel-report');
+        const viewButtons = document.querySelectorAll('.view-btn');
+        const editButtons = document.querySelectorAll('.edit-btn');
+        const deleteButtons = document.querySelectorAll('.delete-btn');
+        const reportForm = document.getElementById('reportForm');
+        
+        // Open modal for adding new report
+        addReportBtn.addEventListener('click', () => {
+            reportForm.reset();
+            modal.style.display = 'block';
+        });
+        
+        // Close modal
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+        
+        cancelBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+        
+        // Close modal when clicking outside of it
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+        
+        // View report
+        viewButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const reportId = button.getAttribute('data-id');
+                alert(`Viewing report with ID: ${reportId}`);
+                // Here you would fetch the report data and populate the modal
+                modal.style.display = 'block';
+            });
+        });
+        
+        // Edit report
+        editButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const reportId = button.getAttribute('data-id');
+                alert(`Editing report with ID: ${reportId}`);
+                // Here you would fetch the report data and populate the form for editing
+                modal.style.display = 'block';
+            });
+        });
+        
+        // Delete report
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const reportId = button.getAttribute('data-id');
+                if (confirm(`Are you sure you want to delete report with ID: ${reportId}?`)) {
+                    alert(`Report with ID: ${reportId} deleted`);
+                    // Here you would send a request to delete the report
+                }
+            });
+        });
+        
+        // Form submission
+        reportForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Report saved!');
+            modal.style.display = 'none';
+            // Here you would send the form data to the server
+        });
+    </script>
+</body>
+</html>

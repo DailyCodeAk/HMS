@@ -1,0 +1,49 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Manage Guests{% endblock %}
+
+{% block content %}
+<section class="admin-section">
+    <h2>Manage Guests</h2>
+    
+    <div class="data-table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Address</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for guest in guests %}
+                <tr>
+                    <td>{{ guest.id }}</td>
+                    <td>{{ guest.name }}</td>
+                    <td>{{ guest.phone }}</td>
+                    <td>{{ guest.address }}</td>
+                    <td>{{ guest.created_at }}</td>
+                    <td>
+                        <a href="#" class="btn btn-small">View Bookings</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6">No guests found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="bookings-section hidden" id="guest-bookings">
+        <h3>Guest Bookings</h3>
+        <div id="bookings-container">
+            <!-- Bookings will be loaded here via JavaScript -->
+        </div>
+    </div>
+</section>
+{% endblock %}

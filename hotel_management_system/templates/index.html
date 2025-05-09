@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% block title %}Welcome{% endblock %}
+
+{% block navigation %}
+<ul>
+    <li><a href="{{ url_for('index') }}">Home</a></li>
+    <li><a href="{{ url_for('user_login') }}">Guest Login</a></li>
+    <li><a href="{{ url_for('user_register') }}">Register</a></li>
+    <li><a href="{{ url_for('admin_login') }}">Staff Login</a></li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <h2>Welcome to WalnutMercury Hotel</h2>
+        <p>Your home away from home</p>
+        <div class="cta-buttons">
+            <a href="{{ url_for('user_booking') }}" class="btn btn-primary">Book Now</a>
+            <a href="{{ url_for('user_login') }}" class="btn btn-secondary">Check Reservation</a>
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <div class="feature">
+        <h3>Luxurious Rooms</h3>
+        <p>Experience comfort like never before in our carefully designed rooms</p>
+    </div>
+    <div class="feature">
+        <h3>Fine Dining</h3>
+        <p>Enjoy exquisite cuisine prepared by our world-class chefs</p>
+    </div>
+    <div class="feature">
+        <h3>Premium Services</h3>
+        <p>From housekeeping to room service, we've got you covered</p>
+    </div>
+</section>
+{% endblock %}

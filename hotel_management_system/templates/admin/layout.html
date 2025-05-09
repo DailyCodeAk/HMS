@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+
+{% block navigation %}
+{% if session.role == 'admin' %}
+<ul>
+    <li><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+    <li><a href="{{ url_for('admin_guests') }}">Guests</a></li>
+    <li><a href="{{ url_for('admin_employees') }}">Employees</a></li>
+    <li><a href="{{ url_for('admin_housekeeping') }}">Housekeeping</a></li>
+    <li><a href="{{ url_for('admin_inventory') }}">Inventory</a></li>
+    <li><a href="{{ url_for('admin_logout') }}">Logout</a></li>
+    <li><a href="{{ url_for('admin_food_orders') }}">Food Orders</a></li>
+    <li><a href="{{ url_for('admin_food_reports') }}">Food Reports</a></li>
+    <li><a href="{{ url_for('admin_room_bookings') }}">Room Bookings</a></li>
+    <li><a href="{{ url_for('admin_menu') }}">Menu</a></li>
+</ul>
+{% endif %}
+{% endblock %}

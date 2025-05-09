@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Management System - {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <style>
+        body {
+            background-image: url("{{ url_for('static', filename='images/hotel-background.jpg') }}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        main {
+            background-color: rgba(255, 255, 255, 0.9);
+            min-height: calc(100vh - 160px);
+            padding: 20px;
+        }
+        header, footer {
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 1rem;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+    {% block extra_js_head %}{% endblock %}
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <h1>WalnutMercury Hotel</h1>
+        </div>
+        <nav>
+            {% block navigation %}{% endblock %}
+        </nav>
+    </header>
+    
+    <main>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="flash-messages">
+              {% for message in messages %}
+                <div class="flash-message">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 WalnutMercury Hotel Management System</p>
+    </footer>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
