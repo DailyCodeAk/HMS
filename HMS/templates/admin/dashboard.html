@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Welcome to the Admin Dashboard</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('admin_guests') }}">Guests</a></li>
+                <li><a href="{{ url_for('admin_employees') }}">Employees</a></li>
+                <li><a href="{{ url_for('admin_housekeeping') }}">Housekeeping</a></li>
+                <li><a href="{{ url_for('admin_inventory') }}">Inventory</a></li>
+                <li><a href="{{ url_for('admin_logout') }}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section>
+            <h2>Dashboard Statistics</h2>
+            <ul>
+                <li>Total Guests: {{ guest_count }}</li>
+                <li>Total Employees: {{ employee_count }}</li>
+                <li>Total Rooms: {{ room_count }}</li>
+                <li>Total Inventory Items: {{ inventory_count }}</li>
+            </ul>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 Walnut Mercury Hotel Management System</p>
+    </footer>
+</body>
+</html>

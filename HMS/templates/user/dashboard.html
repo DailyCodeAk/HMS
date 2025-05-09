@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Welcome, {{ username }}!</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('user_dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('user_booking') }}">Book a Room</a></li>
+                <li><a href="{{ url_for('user_room_service') }}">Room Service</a></li>
+                <li><a href="{{ url_for('user_logout') }}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main>
+        <section>
+            <h2>Your Profile</h2>
+            <p>Name: {{ guest.name }}</p>
+            <p>Phone: {{ guest.phone }}</p>
+            <p>Address: {{ guest.address }}</p>
+        </section>
+
+        <section>
+            <h2>Your Bookings</h2>
+            {% if bookings %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Room Number</th>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                            <tr>
+                                <td>{{ booking.room_number }}</td>
+                                <td>{{ booking.check_in }}</td>
+                                <td>{{ booking.check_out }}</td>
+                                <td>{{ booking.status }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>You have no bookings.</p>
+            {% endif %}
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; {{ current_year }} Walnut Mercury Hotel. All rights reserved.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employees Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Employees Management</h1>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn">Back to Dashboard</a>
+        
+        <h2>Employee List</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Position</th>
+                    <th>Department</th>
+                    <th>Contact</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for employee in employees %}
+                <tr>
+                    <td>{{ employee.id }}</td>
+                    <td>{{ employee.name }}</td>
+                    <td>{{ employee.position }}</td>
+                    <td>{{ employee.department }}</td>
+                    <td>{{ employee.contact }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Add New Employee</h2>
+        <form action="{{ url_for('add_employee') }}" method="POST">
+            <input type="text" name="name" placeholder="Name" required>
+            <input type="text" name="position" placeholder="Position" required>
+            <input type="text" name="department" placeholder="Department" required>
+            <input type="text" name="contact" placeholder="Contact" required>
+            <button type="submit">Add Employee</button>
+        </form>
+    </div>
+</body>
+</html>

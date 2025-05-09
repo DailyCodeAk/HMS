@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Room Service</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Room Service</h1>
+        <h2>Your Active Bookings</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Room Number</th>
+                    <th>Check-in Date</th>
+                    <th>Check-out Date</th>
+                    <th>Status</th>
+                    <th>Request Service</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td>{{ booking.room_number }}</td>
+                    <td>{{ booking.check_in }}</td>
+                    <td>{{ booking.check_out }}</td>
+                    <td>{{ booking.status }}</td>
+                    <td>
+                        <form method="POST">
+                            <input type="hidden" name="booking_id" value="{{ booking.id }}">
+                            <select name="service_type" required>
+                                <option value="">Select Service</option>
+                                <option value="Cleaning">Cleaning</option>
+                                <option value="Food">Food</option>
+                                <option value="Maintenance">Maintenance</option>
+                            </select>
+                            <textarea name="notes" placeholder="Additional notes..."></textarea>
+                            <button type="submit">Request</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Booking</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Book a Room</h1>
+        <form method="POST">
+            <label for="room_id">Select Room:</label>
+            <select name="room_id" id="room_id" required>
+                {% for room in rooms %}
+                    <option value="{{ room.id }}">{{ room.room_number }} - {{ room.type }} ({{ room.price }} per night)</option>
+                {% endfor %}
+            </select>
+
+            <label for="check_in">Check-in Date:</label>
+            <input type="date" name="check_in" id="check_in" required>
+
+            <label for="check_out">Check-out Date:</label>
+            <input type="date" name="check_out" id="check_out" required>
+
+            <button type="submit">Book Now</button>
+        </form>
+
+        <a href="{{ url_for('user_dashboard') }}">Back to Dashboard</a>
+    </div>
+</body>
+</html>
